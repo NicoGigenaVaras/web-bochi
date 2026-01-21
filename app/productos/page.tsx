@@ -38,7 +38,9 @@ function cn(...classes: Array<string | null | undefined | false>) {
 }
 
 /** =====================================================
- * Carrusel horizontal (auto-scroll por CSS animation bochi-marquee)
+ * Carrusel responsive
+ * - Mobile: swipe (scroll horizontal + snap)
+ * - Desktop: mantiene el auto-scroll (marquee)
  * ===================================================== */
 function AutoMarquee({
   images,
@@ -52,36 +54,55 @@ function AutoMarquee({
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-white">
-      <div
-        className={cn(
-          "flex w-max gap-3 p-3",
-          "bochi-marquee",
-          "motion-reduce:animate-none"
-        )}
-      >
-        {loop.map((src, i) => (
+      {/* ✅ MOBILE (swipe): scroll horizontal con snap */}
+      <div className="flex gap-3 overflow-x-auto p-3 sm:hidden snap-x snap-mandatory scroll-smooth no-scrollbar">
+        {safeImages.map((src, i) => (
           <button
             key={`${src}-${i}`}
             type="button"
-            onClick={() => onOpen(i % safeImages.length)}
-            className="group relative overflow-hidden rounded-xl outline-none focus:ring-2 focus:ring-black/20"
+            onClick={() => onOpen(i)}
+            className="snap-start shrink-0 overflow-hidden rounded-xl outline-none focus:ring-2 focus:ring-black/20"
           >
             <img
               src={src || PLACEHOLDER}
               alt={`foto ${i + 1}`}
-              className="h-28 w-44 object-cover transition-transform duration-300 group-hover:scale-[1.03] sm:h-32 sm:w-56"
+              className="h-32 w-56 object-cover"
               loading="lazy"
+              draggable={false}
             />
           </button>
         ))}
       </div>
 
-      {/* fades laterales */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white to-white/0" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-white/0" />
+      {/* ✅ DESKTOP: auto-scroll marquee (igual a tu estilo actual) */}
+      <div className="hidden sm:block">
+        <div className={cn("flex w-max gap-3 p-3", "bochi-marquee", "motion-reduce:animate-none")}>
+          {loop.map((src, i) => (
+            <button
+              key={`${src}-${i}`}
+              type="button"
+              onClick={() => onOpen(i % safeImages.length)}
+              className="group relative overflow-hidden rounded-xl outline-none focus:ring-2 focus:ring-black/20"
+            >
+              <img
+                src={src || PLACEHOLDER}
+                alt={`foto ${i + 1}`}
+                className="h-32 w-56 object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                loading="lazy"
+                draggable={false}
+              />
+            </button>
+          ))}
+        </div>
+
+        {/* fade laterales */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white to-white/0" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-white/0" />
+      </div>
     </div>
   )
 }
+
 
 /** =====================================================
  * Lightbox / Popup

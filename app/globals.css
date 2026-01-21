@@ -244,3 +244,12 @@ html {
     transform: translateX(-50%);
   }
 }
+
+/* Oculta scrollbar horizontal (mobile carrusel) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
