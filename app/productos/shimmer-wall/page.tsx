@@ -12,6 +12,7 @@ export default function Page() {
           "/productos/shimmer-wall/07.jpg",
       ]}
       whatsappMessage="Hola! Quisiera cotizar Shimmer Wall."
+      backHref="/productos#shimmer-wall"
       inConstruction={false}
     />
   )

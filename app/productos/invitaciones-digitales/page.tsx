@@ -12,6 +12,7 @@ export default function Page() {
         PLACEHOLDER,
       ]}
       whatsappMessage="Hola! Quisiera cotizar Invitaciones digitales."
+      backHref="/productos#invitaciones-digitales"
       inConstruction={true}
     />
   )

@@ -6,7 +6,7 @@
 // - Cada sección tiene "Ver más" y el título clickeable que deriva a:
 //   /productos/<id>  (ej: /productos/shimmer-wall)
 // - Además mantiene anclas: /productos#shimmer-wall
-// - Lo ÚNICO que cambia con el tiempo son LAS FOTOS
+// - Lo ÚNICO que cambia con el tiempo son LAS FOTOS / VIDEOS
 // =====================================================
 
 import { useEffect, useMemo, useState } from "react"
@@ -30,11 +30,87 @@ type CatalogItem = {
   id: string // 👈 se usa para ruta y anclas: /productos/<id>  y /productos#<id>
   title: string
   subtitle: string
-  images: string[]
+  images: string[] // 👈 soporta: .jpg/.png/... y también .mp4/.webm
 }
 
 function cn(...classes: Array<string | null | undefined | false>) {
   return classes.filter(Boolean).join(" ")
+}
+
+// ✅ Detecta si un src es video
+function isVideo(src?: string) {
+  if (!src) return false
+  const clean = src.split("?")[0].toLowerCase()
+  return clean.endsWith(".mp4") || clean.endsWith(".webm")
+}
+
+// ✅ Saca un "safe list" (si viene vacío, pone placeholder)
+function normalizeMedia(list: string[]) {
+  return list?.length ? list : [PLACEHOLDER]
+}
+
+// ✅ Preload SOLO imágenes (evita lag al pasar de foto a foto)
+function preloadImage(src: string) {
+  if (!src || isVideo(src) || src === PLACEHOLDER) return
+  const img = new Image()
+  img.src = src
+}
+
+function preloadAround(list: string[], index: number) {
+  const len = list.length
+  if (len <= 1) return
+  preloadImage(list[index])
+  preloadImage(list[(index + 1) % len])
+  preloadImage(list[(index - 1 + len) % len])
+}
+
+/** =====================================================
+ * MediaThumb (para carrusel y miniaturas)
+ * - Si es video: <video muted loop playsInline>
+ * - Si es imagen: <img>
+ * - Opcional overlay "VIDEO"
+ * ===================================================== */
+function MediaThumb({
+  src,
+  alt,
+  className,
+  showVideoBadge = false,
+}: {
+  src: string
+  alt: string
+  className: string
+  showVideoBadge?: boolean
+}) {
+  const video = isVideo(src)
+
+  return (
+    <div className="relative">
+      {video ? (
+        <video
+          src={src}
+          className={className}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        />
+      ) : (
+        <img
+          src={src || PLACEHOLDER}
+          alt={alt}
+          className={className}
+          loading="lazy"
+          draggable={false}
+        />
+      )}
+
+      {video && showVideoBadge && (
+        <div className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold tracking-wide text-white">
+          VIDEO
+        </div>
+      )}
+    </div>
+  )
 }
 
 /** =====================================================
@@ -49,48 +125,48 @@ function AutoMarquee({
   images: string[]
   onOpen: (index: number) => void
 }) {
-  const safeImages = images.length ? images : [PLACEHOLDER]
-  const loop = [...safeImages, ...safeImages]
+  const safeMedia = normalizeMedia(images)
+  const loop = [...safeMedia, ...safeMedia]
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-black/10 bg-white">
       {/* ✅ MOBILE (swipe): scroll horizontal con snap */}
       <div className="flex gap-3 overflow-x-auto p-3 sm:hidden snap-x snap-mandatory scroll-smooth no-scrollbar">
-        {safeImages.map((src, i) => (
+        {safeMedia.map((src, i) => (
           <button
             key={`${src}-${i}`}
             type="button"
             onClick={() => onOpen(i)}
             className="snap-start shrink-0 overflow-hidden rounded-xl outline-none focus:ring-2 focus:ring-black/20"
           >
-            <img
-              src={src || PLACEHOLDER}
-              alt={`foto ${i + 1}`}
+            <MediaThumb
+              src={src}
+              alt={`media ${i + 1}`}
               className="h-32 w-56 object-cover"
-              loading="lazy"
-              draggable={false}
+              showVideoBadge
             />
           </button>
         ))}
       </div>
 
-      {/* ✅ DESKTOP: auto-scroll marquee (igual a tu estilo actual) */}
+      {/* ✅ DESKTOP: auto-scroll marquee */}
       <div className="hidden sm:block">
         <div className={cn("flex w-max gap-3 p-3", "bochi-marquee", "motion-reduce:animate-none")}>
           {loop.map((src, i) => (
             <button
               key={`${src}-${i}`}
               type="button"
-              onClick={() => onOpen(i % safeImages.length)}
+              onClick={() => onOpen(i % safeMedia.length)}
               className="group relative overflow-hidden rounded-xl outline-none focus:ring-2 focus:ring-black/20"
             >
-              <img
-                src={src || PLACEHOLDER}
-                alt={`foto ${i + 1}`}
-                className="h-32 w-56 object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                loading="lazy"
-                draggable={false}
-              />
+              <div className="overflow-hidden rounded-xl">
+                <MediaThumb
+                  src={src}
+                  alt={`media ${i + 1}`}
+                  className="h-32 w-56 object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  showVideoBadge
+                />
+              </div>
             </button>
           ))}
         </div>
@@ -103,12 +179,13 @@ function AutoMarquee({
   )
 }
 
-
 /** =====================================================
- * Lightbox / Popup
- * - X siempre adelante (z-index alto)
- * - Loader con logo cuando cambia/carga la imagen
- * - Swipe (drag) para pasar imágenes en mobile
+ * Lightbox / Popup (SIN “colgado”)
+ * - Doble capa:
+ *   - BASE: lo que se ve (no se desmonta)
+ *   - PENDIENTE: se monta arriba, carga, y recién ahí se confirma
+ * - ✅ FIX: la CAPA BASE también apaga el loader en el primer open
+ * - Swipe (drag) solo en imágenes
  * ===================================================== */
 function Lightbox({
   open,
@@ -121,34 +198,41 @@ function Lightbox({
   startIndex: number
   onClose: () => void
 }) {
-  const safeImages = images.length ? images : [PLACEHOLDER]
-  const [[index, direction], setIndex] = useState<[number, number]>([
-    startIndex,
-    0,
-  ])
+  const safeMedia = normalizeMedia(images)
+
+  const [shownIndex, setShownIndex] = useState(startIndex)     // lo que se ve
+  const [pendingIndex, setPendingIndex] = useState(startIndex) // lo que quiero cargar arriba
+  const [direction, setDirection] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
-  // ✅ sincroniza cuando abrís el popup en otra foto
   useEffect(() => {
     if (!open) return
+    const idx = Math.max(0, Math.min(startIndex, safeMedia.length - 1))
+    setShownIndex(idx)
+    setPendingIndex(idx)
+    setDirection(0)
     setIsLoading(true)
-    setIndex([Math.max(0, Math.min(startIndex, safeImages.length - 1)), 0])
+    preloadAround(safeMedia, idx)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, startIndex, images.join("|")])
 
-  const paginate = (dir: number) => {
+  const requestIndex = (next: number, dir: number) => {
+    if (next === pendingIndex) return
     setIsLoading(true)
-    setIndex(([prev]) => {
-      const next = (prev + dir + safeImages.length) % safeImages.length
-      return [next, dir]
-    })
+    setDirection(dir)
+    setPendingIndex(next)
+    preloadAround(safeMedia, next)
   }
 
-  const variants = {
-    enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
+  const paginate = (dir: number) => {
+    const next = (pendingIndex + dir + safeMedia.length) % safeMedia.length
+    requestIndex(next, dir)
   }
+
+  const shownSrc = safeMedia[shownIndex]
+  const pendingSrc = safeMedia[pendingIndex]
+  const shownIsVideo = isVideo(shownSrc)
+  const pendingIsVideo = isVideo(pendingSrc)
 
   return (
     <AnimatePresence>
@@ -194,30 +278,100 @@ function Lightbox({
                   </div>
                 )}
 
-                <AnimatePresence initial={false} custom={direction}>
-                  <motion.img
-                    key={index}
-                    src={safeImages[index] || PLACEHOLDER}
-                    alt={`imagen ${index + 1}`}
-                    className="h-[60vh] w-full select-none bg-black object-contain"
-                    custom={direction}
-                    variants={variants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.18 }}
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.12}
-                    onDragEnd={(_, info) => {
-                      const swipe = info.offset.x
-                      if (swipe < -60) paginate(1)
-                      if (swipe > 60) paginate(-1)
-                    }}
-                    onLoad={() => setIsLoading(false)}
-                    onError={() => setIsLoading(false)}
-                  />
-                </AnimatePresence>
+                {/* =========================
+                    CAPA BASE (NO se desmonta)
+                    ✅ FIX: también apaga loader cuando carga
+                   ========================= */}
+                <div className="relative h-[60vh] w-full bg-black">
+                  {shownIsVideo ? (
+                    <video
+                      key={`base-video-${shownIndex}`} // 🔒 asegura evento load al cambiar
+                      src={shownSrc}
+                      controls
+                      playsInline
+                      className="h-full w-full object-contain"
+                      onLoadedData={() => {
+                        // si justo estamos abriendo y no hay pending, esto evita el “colgado”
+                        if (pendingIndex === shownIndex) setIsLoading(false)
+                      }}
+                      onError={() => {
+                        if (pendingIndex === shownIndex) setIsLoading(false)
+                      }}
+                    />
+                  ) : (
+                    <motion.img
+                      key={`base-img-${shownIndex}`} // 🔒 asegura evento load al cambiar
+                      src={shownSrc || PLACEHOLDER}
+                      alt={`imagen ${shownIndex + 1}`}
+                      className="h-full w-full select-none object-contain"
+                      decoding="async"
+                      loading="eager"
+                      draggable={false}
+                      // swipe SOLO para imágenes
+                      drag="x"
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={0.12}
+                      onDragEnd={(_, info) => {
+                        const swipe = info.offset.x
+                        if (swipe < -60) paginate(1)
+                        if (swipe > 60) paginate(-1)
+                      }}
+                      onLoad={() => {
+                        // ✅ FIX PRINCIPAL: si pending==shown, apagamos loader acá mismo
+                        if (pendingIndex === shownIndex) setIsLoading(false)
+                      }}
+                      onError={() => {
+                        if (pendingIndex === shownIndex) setIsLoading(false)
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* =========================
+                    CAPA PENDIENTE (carga arriba)
+                   ========================= */}
+                {pendingIndex !== shownIndex && (
+                  <motion.div
+                    className="absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {pendingIsVideo ? (
+                      <video
+                        key={`pending-video-${pendingIndex}`}
+                        src={pendingSrc}
+                        controls
+                        autoPlay
+                        playsInline
+                        className="h-[60vh] w-full bg-black object-contain"
+                        onLoadedData={() => {
+                          setIsLoading(false)
+                          setShownIndex(pendingIndex)
+                        }}
+                        onError={() => setIsLoading(false)}
+                      />
+                    ) : (
+                      <motion.img
+                        key={`pending-img-${pendingIndex}`}
+                        initial={{ x: direction > 0 ? 30 : -30, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                        src={pendingSrc || PLACEHOLDER}
+                        alt={`imagen ${pendingIndex + 1}`}
+                        className="h-[60vh] w-full select-none bg-black object-contain"
+                        decoding="async"
+                        loading="eager"
+                        draggable={false}
+                        onLoad={() => {
+                          setIsLoading(false)
+                          setShownIndex(pendingIndex)
+                        }}
+                        onError={() => setIsLoading(false)}
+                      />
+                    )}
+                  </motion.div>
+                )}
 
                 {/* Flechas por delante */}
                 <div className="absolute inset-y-0 left-0 z-[1600] flex items-center">
@@ -242,24 +396,21 @@ function Lightbox({
 
               {/* Miniaturas */}
               <div className="flex gap-2 overflow-x-auto p-3">
-                {safeImages.map((src, i) => (
+                {safeMedia.map((src, i) => (
                   <button
                     key={`${src}-${i}`}
                     type="button"
-                    onClick={() => {
-                      setIsLoading(true)
-                      setIndex([i, i > index ? 1 : -1])
-                    }}
+                    onClick={() => requestIndex(i, i > pendingIndex ? 1 : -1)}
                     className={cn(
                       "overflow-hidden rounded-lg border",
-                      i === index ? "border-black" : "border-black/10"
+                      i === shownIndex ? "border-black" : "border-black/10"
                     )}
                   >
-                    <img
-                      src={src || PLACEHOLDER}
+                    <MediaThumb
+                      src={src}
                       alt={`thumb ${i + 1}`}
                       className="h-14 w-20 object-cover"
-                      loading="lazy"
+                      showVideoBadge
                     />
                   </button>
                 ))}
@@ -273,20 +424,19 @@ function Lightbox({
 }
 
 export default function ProductosPage() {
-  // =====================================================
-  // CATÁLOGO (FIJO)
-  // - id debe coincidir con:
-  //   1) La ruta: /productos/<id>
-  //   2) La ancla: /productos#<id>
-  // - Solo cambian las fotos (paths)
-  // =====================================================
   const catalog: CatalogItem[] = useMemo(
     () => [
       {
         id: "shinny-balls",
         title: "Shinny Balls",
         subtitle: "Esferas que cambian tu fiesta.",
-        images: [PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
+        images: [
+          "/productos/shinny-balls/plata-01.jpg",
+          "/productos/shinny-balls/plata-02.jpg",
+          "/productos/shinny-balls/plata-03.jpg",
+          "/productos/shinny-balls/plata-04.jpg",
+          "/productos/shinny-balls/basquet-01.jpg",
+        ],
       },
       {
         id: "shimmer-wall",
@@ -324,7 +474,11 @@ export default function ProductosPage() {
         id: "estructuras",
         title: "Estructuras",
         subtitle: "Estructuras que elevan el impacto visual.",
-        images: [PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
+        images: [
+          "/productos/estructuras/bola-boliche.jpg",
+          "/productos/estructuras/tunel-black.jpg",
+          "/productos/estructuras/tunel-color.jpg",
+        ],
       },
       {
         id: "invitaciones-digitales",
@@ -342,7 +496,15 @@ export default function ProductosPage() {
         id: "decoracion-personalizada",
         title: "Decoración Personalizada",
         subtitle: "Diseño a medida para que tu evento sea único.",
-        images: [PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
+        images: [
+          "/productos/decoracion-personalizada/festejo-40.jpg",
+          "/productos/decoracion-personalizada/festejo-40.mp4",
+          "/productos/decoracion-personalizada/fiesta-disco-01.mp4",
+          "/productos/decoracion-personalizada/fiesta-disco-02.jpg",
+          "/productos/decoracion-personalizada/fiesta-disco-03.jpg",
+          "/productos/decoracion-personalizada/anio-nuevo-2026.jpg",
+          "/productos/decoracion-personalizada/navidad-2026.jpg",
+        ],
       },
     ],
     []
@@ -364,7 +526,6 @@ export default function ProductosPage() {
         <AppHeader />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:py-14">
-          {/* Header centrado */}
           <header className="mx-auto mb-10 max-w-2xl text-center">
             <p className="text-xs font-medium tracking-[0.22em] text-neutral-600">
               PRODUCTOS & SERVICIOS
@@ -375,23 +536,21 @@ export default function ProductosPage() {
             </h1>
 
             <p className="mt-4 text-base text-neutral-600">
-              Deslizá las fotos para ver ejemplos. Tocá una imagen para verla en grande. Si querés más info, entrá en “Ver más”.
+              Deslizá las fotos/videos para ver ejemplos. Tocá una media para verla en grande. Si querés más info,
+              entrá en “Ver más”.
             </p>
           </header>
 
-          {/* Secciones */}
           <section className="space-y-8">
             {catalog.map((item) => (
               <Card
                 key={item.id}
-                id={item.id} // ✅ ancla /productos#<id>
+                id={item.id}
                 className="scroll-mt-24 overflow-hidden rounded-[28px] border border-black/10 bg-white shadow-[0_18px_45px_rgba(0,0,0,0.12)]"
               >
                 <div className="p-6 sm:p-8">
-                  {/* ✅ Header de cada card + CTA */}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div className="text-center sm:text-left">
-                      {/* ✅ Título clickeable */}
                       <Link
                         href={`/productos/${item.id}`}
                         className="group inline-flex items-center justify-center gap-2 sm:justify-start"
@@ -404,16 +563,13 @@ export default function ProductosPage() {
 
                       <p className="mt-2 text-base text-neutral-600">{item.subtitle}</p>
 
-                      {/* SECTOR EN CONSTRUCCIÓN */}
-                      {item.images.every((img) => img === PLACEHOLDER) && (
+                      {item.images.every((m) => m === PLACEHOLDER) && (
                         <p className="mt-3 text-sm text-neutral-500">
-                          {/* SECTOR EN CONSTRUCCIÓN */}
                           Próximamente sumamos fotos reales de este producto ✨
                         </p>
                       )}
                     </div>
 
-                    {/* ✅ Botón Ver más */}
                     <div className="flex justify-center sm:justify-end">
                       <Button asChild variant="outline" className="rounded-xl">
                         <Link href={`/productos/${item.id}`}>Ver más</Link>
@@ -421,7 +577,6 @@ export default function ProductosPage() {
                     </div>
                   </div>
 
-                  {/* Carrusel */}
                   <div className="mt-6">
                     <AutoMarquee
                       images={item.images}

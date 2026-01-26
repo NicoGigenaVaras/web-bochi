@@ -13,6 +13,7 @@ export default function Page() {
         PLACEHOLDER,
       ]}
       whatsappMessage="Hola! Quisiera cotizar Barras móviles."
+      backHref="/productos#barras-moviles"
       inConstruction={true}
     />
   )

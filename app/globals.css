@@ -253,3 +253,23 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* WhatsApp floating pulse (sutil) */
+@keyframes bochi-wa-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.35);
+    transform: scale(1);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(37, 211, 102, 0);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+    transform: scale(1);
+  }
+}
+
+.bochi-wa-pulse {
+  animation: bochi-wa-pulse 2.4s ease-out infinite;
+}

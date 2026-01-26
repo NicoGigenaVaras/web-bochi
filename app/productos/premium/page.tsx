@@ -12,6 +12,7 @@ export default function Page() {
         PLACEHOLDER,
       ]}
       whatsappMessage="Hola! Quisiera cotizar Sectores Premium."
+      backHref="/productos#premium"
       inConstruction={true}
     />
   )

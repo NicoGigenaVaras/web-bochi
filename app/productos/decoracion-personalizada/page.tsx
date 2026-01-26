@@ -12,6 +12,7 @@ export default function Page() {
         PLACEHOLDER,
       ]}
       whatsappMessage="Hola! Quisiera cotizar Decoración Personalizada."
+      backHref="/productos#decoracion-personalizada"
       inConstruction={true}
     />
   )
