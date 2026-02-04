@@ -6,14 +6,18 @@ export default function Page() {
     <ProductSectionPage
       title="Sectores Premium"
       subtitle="Detalles premium que transforman el ambiente."
-      description="Creamos sectores destacados con piezas premium, iluminación y composición estética. Ideal para mesa principal, fotos o rincones especiales."
+      description={`Sectores premium pensados para crear experiencias únicas dentro del evento.
+
+Propuestas más personalizadas y cuidadas, como sector merchandising, flower bar o panel de tul backdrop, diseñadas para destacar espacios específicos.
+
+Cada sector se adapta al estilo del evento, aportando identidad, impacto visual y un detalle especial que marca la diferencia.`}
       images={[
-        PLACEHOLDER,
-        PLACEHOLDER,
+          "/productos/premium/03.jpg",
+          "/productos/premium/07.jpg",
       ]}
       whatsappMessage="Hola! Quisiera cotizar Sectores Premium."
       backHref="/productos#premium"
-      inConstruction={true}
+      inConstruction={false}
     />
   )
 }

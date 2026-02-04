@@ -6,7 +6,11 @@ export default function Page() {
     <ProductSectionPage
       title="Mesas"
       subtitle="Versátiles y elegantes para cada rincón."
-      description="Mesas para recepciones, apoyo, candy bar, lounge o sector principal. Elegimos el formato ideal según tu evento."
+      description={`Mesas diseñadas para lucir cada detalle de tu evento.
+
+Ideales para candy bar, mesas dulces y estaciones decorativas.
+
+Disponibles en diferentes tamaños y estilos, pensadas para integrarse a la ambientación general.`}
       images={[
         PLACEHOLDER,
         PLACEHOLDER,

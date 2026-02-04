@@ -7,14 +7,19 @@ export default function Page() {
     <ProductSectionPage
       title="Barras móviles"
       subtitle="Barra lista para servir, estética y funcional."
-      description="Barras móviles para tragos, recepción y servicio. Se adaptan al estilo del evento y combinan con la ambientación."
+      description={`Barras móviles de diseño, ideales para acompañar recepciones, fiestas y eventos sociales.
+
+Se alquila exclusivamente el mobiliario, pensado para sumar estética y funcionalidad al espacio.
+
+Contamos con distintos modelos y tamaños, incluyendo opciones con ruedas para facilitar su ubicación según el evento.
+No incluye bebidas ni personal para atención.`}
       images={[
-        PLACEHOLDER,
-        PLACEHOLDER,
+          "/productos/barras-moviles/01.jpg",
+          "/productos/barras-moviles/02.jpg",
       ]}
       whatsappMessage="Hola! Quisiera cotizar Barras móviles."
       backHref="/productos#barras-moviles"
-      inConstruction={true}
+      inConstruction={false}
     />
   )
 }

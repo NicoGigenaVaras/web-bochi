@@ -16,8 +16,8 @@ Disponibles en color plateado, con distintos tamaños en stock según la necesid
 
 Consultanos para combinarlas y lograr un resultado a medida.`}
       images={[
-          "/productos/shinny-balls/plata-03.jpg",
-          "/productos/shinny-balls/plata-02.jpg",
+          "/productos/shinny-balls/01.jpg",
+          "/productos/shinny-balls/03.jpg",
       ]}
       whatsappMessage="Hola! Quisiera cotizar Shinny Balls."
       backHref="/productos#shinny-balls"

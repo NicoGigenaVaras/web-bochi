@@ -6,10 +6,14 @@ export default function Page() {
     <ProductSectionPage
       title="Decoración Personalizada"
       subtitle="Diseñamos tu evento a medida."
-      description="Ambientación integral: colores, concepto, detalles y composición. Te acompañamos desde la idea hasta el montaje final."
+      description={`Decoración personalizada pensada para reflejar la identidad de cada evento.
+
+Nos adaptamos al espacio y al presupuesto de cada cliente, diseñando propuestas a medida, sin perder de vista lo más importante: los detalles.
+
+Cada ambientación es única, creada con dedicación para lograr un resultado armonioso y especial.`}
       images={[
-        PLACEHOLDER,
-        PLACEHOLDER,
+          "/productos/decoracion-personalizada/festejo-40.jpg",
+          "/productos/decoracion-personalizada/anio-nuevo-2026.jpg",
       ]}
       whatsappMessage="Hola! Quisiera cotizar Decoración Personalizada."
       backHref="/productos#decoracion-personalizada"
@@ -17,3 +21,4 @@ export default function Page() {
     />
   )
 }
+

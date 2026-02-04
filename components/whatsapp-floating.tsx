@@ -1,64 +1,25 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { X, Send, User, Bot } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useMemo } from "react"
 
-type ChatMsg = {
-  role: "user" | "assistant"
-  text: string
-  ts: number
-}
-
-// =========================
-// ✅ CONFIG (EDITABLE)
-// =========================
-const ASSISTANT_NAME = "Nick"
-const ASSISTANT_SUBTITLE = "Consultas rápidas"
-const BUBBLE_HINT = "¿Tienes alguna duda?"
-const N8N_WEBHOOK_TEST_URL = "http://localhost:5678/webhook-test/bochi-nick"
-
-const GREETING_MESSAGE =
-  "Hola! Soy Nick 🤖✨\nTu asistente virtual.\nConsultame lo que necesites."
-
-const INPUT_PLACEHOLDER = "Escribí tu consulta…"
-const HUMAN_CTA_TEXT = "Hablar con una persona"
-
-const DEFAULT_WA_PREFILL =
-  "Hola! Vengo desde la web de Eventos Bochi 🙌\nQuiero hablar con una persona."
-
-// Guardado local del chat
-const STORAGE_KEY = "bochi_nick_chat_v2"
-
-// ✅ Link base a tu WhatsApp (recomendado por .env.local)
+// ✅ Link base a tu WhatsApp (por .env.local)
 // Ej: NEXT_PUBLIC_WHATSAPP_LINK="https://wa.me/5493517570278"
 const DEFAULT_WA_LINK =
   process.env.NEXT_PUBLIC_WHATSAPP_LINK || "https://wa.me/5493517570278"
 
+// ✅ Mensaje inicial (llamativo)
+const WA_FIRST_MESSAGE =
+  "Hola! 🙌 Vengo desde la web de Eventos Bochi.\nQuiero ayuda con la decoración de mi evento ✨\n¿Me cuentan disponibilidad y opciones?"
+
 // Colores de WhatsApp
 const WHATSAPP_GREEN = "#25D366"
-const WHATSAPP_DARK = "#128C7E"
 
+// ✅ Helper: arma link con texto
 function buildWhatsAppLink(baseLink: string, text: string) {
   const encoded = encodeURIComponent(text)
+  // Si el link ya trae ?text= por algún motivo, no lo duplicamos:
+  if (baseLink.includes("?text=")) return baseLink
   return `${baseLink}?text=${encoded}`
-}
-
-function formatTime(ts: number) {
-  try {
-    return new Date(ts).toLocaleString("es-AR", { hour: "2-digit", minute: "2-digit" })
-  } catch {
-    return ""
-  }
-}
-
-// Resumen simple (placeholder). Luego lo reemplazamos por n8n+Gemini.
-function makeSummary(messages: ChatMsg[]) {
-  const userMsgs = messages.filter((m) => m.role === "user").map((m) => m.text)
-  if (userMsgs.length === 0) return "El cliente aún no escribió consultas."
-
-  const last = userMsgs.slice(-3).map((t) => `- ${t}`).join("\n")
-  return `Últimas consultas:\n${last}`
 }
 
 // ✅ Ícono WhatsApp (SVG) para no depender de librerías
@@ -78,235 +39,29 @@ function WhatsAppIcon({ className = "" }: { className?: string }) {
 }
 
 export function WhatsAppFloating() {
-  const [open, setOpen] = useState(false)
-  const [input, setInput] = useState("")
-  const [messages, setMessages] = useState<ChatMsg[]>([])
-
-  const chatTitle = useMemo(
-    () => `${ASSISTANT_NAME} • Asistente Virtual`,
-    []
-  )
-
-  // Init + cargar chat guardado
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setMessages(JSON.parse(raw))
-      else setMessages([{ role: "assistant", text: GREETING_MESSAGE, ts: Date.now() }])
-    } catch {
-      setMessages([{ role: "assistant", text: GREETING_MESSAGE, ts: Date.now() }])
-    }
-  }, [])
-
-  // Persistir chat
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-    } catch {
-      // noop
-    }
-  }, [messages])
-
-  const canSend = input.trim().length > 0
-
-    async function sendUserMessage() {
-  const text = input.trim()
-  if (!text) return
-
-  const now = Date.now()
-
-  // 1) Mostrar mensaje del usuario + "escribiendo"
-  const loading: ChatMsg = {
-    role: "assistant",
-    text: "Escribiendo…",
-    ts: now + 1,
-  }
-
-  setMessages((prev) => [...prev, { role: "user", text, ts: now }, loading])
-  setInput("")
-
-  try {
-    // 2) Llamar a tu API Next (proxy a n8n) → evita CORS
-    const res = await fetch("/api/nick", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId: "web-local",
-        message: text,
-      }),
-    })
-
-    if (!res.ok) throw new Error("Nick API error")
-
-    const data = (await res.json()) as { reply?: string; handoff?: boolean }
-
-    const replyText = data?.reply ?? "Perdón, no pude responder en este momento."
-
-    // 3) Reemplazar el loading por la respuesta real
-    setMessages((prev) => {
-      const trimmed = prev.slice(0, -1) // saca "Escribiendo…"
-      return [...trimmed, { role: "assistant", text: replyText, ts: Date.now() }]
-    })
-  } catch (err) {
-    setMessages((prev) => {
-      const trimmed = prev.slice(0, -1)
-      return [
-        ...trimmed,
-        {
-          role: "assistant",
-          text: "Ups 😅 Ahora mismo no puedo conectarme. Probá nuevamente.",
-          ts: Date.now(),
-        },
-      ]
-    })
-  }
-}
-
-
-
-  function clearChat() {
-    const initial: ChatMsg[] = [{ role: "assistant", text: GREETING_MESSAGE, ts: Date.now() }]
-    setMessages(initial)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial))
-    } catch {}
-  }
-
-  function handoffToHuman() {
-    const summary = makeSummary(messages)
-    const transcript = messages
-      .slice(-12)
-      .map((m) => `${m.role === "user" ? "Cliente" : ASSISTANT_NAME}: ${m.text}`)
-      .join("\n\n")
-
-    const finalText =
-      `${DEFAULT_WA_PREFILL}\n\n` +
-      `📌 Resumen:\n${summary}\n\n` +
-      `🗨️ Últimos mensajes:\n${transcript}`
-
-    const link = buildWhatsAppLink(DEFAULT_WA_LINK, finalText)
-    window.open(link, "_blank", "noopener,noreferrer")
-  }
+  const waLink = useMemo(() => buildWhatsAppLink(DEFAULT_WA_LINK, WA_FIRST_MESSAGE), [])
 
   return (
     <div
       className="fixed right-4 z-[60] flex flex-col items-end gap-2"
-      style={{
-        bottom: "calc(1rem + env(safe-area-inset-bottom))",
-      }}
+      style={{ bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
     >
-      {/* Ventana del chat */}
-      {open && (
-        <div className="w-[92vw] max-w-[420px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-          {/* Header */}
-          <div
-            className="flex items-center justify-between gap-3 px-3 py-3 text-white"
-            style={{
-              background: `linear-gradient(135deg, ${WHATSAPP_DARK}, ${WHATSAPP_GREEN})`,
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/15">
-                <Bot className="h-5 w-5" />
-              </div>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold">{chatTitle}</p>
-                <p className="text-xs text-white/85">{ASSISTANT_SUBTITLE}</p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setOpen(false)}
-              className="rounded-lg p-1 hover:bg-white/15"
-              aria-label="Cerrar"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Mensajes */}
-          <div className="max-h-[420px] space-y-2 overflow-auto bg-gray-50 p-3">
-            {messages.map((m, idx) => {
-              const isUser = m.role === "user"
-              return (
-                <div key={idx} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                      isUser ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 pb-1 text-xs opacity-70">
-                      {isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
-                      <span>{isUser ? "Vos" : ASSISTANT_NAME}</span>
-                      <span>•</span>
-                      <span>{formatTime(m.ts)}</span>
-                    </div>
-                    <div className="whitespace-pre-line">{m.text}</div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Acciones + input */}
-          <div className="grid gap-2 border-t border-gray-200 bg-white p-3">
-            <div className="flex gap-2">
-              <Button
-                className="w-full rounded-xl"
-                onClick={handoffToHuman}
-                style={{ backgroundColor: WHATSAPP_GREEN }}
-              >
-                {HUMAN_CTA_TEXT}
-              </Button>
-              <Button variant="outline" onClick={clearChat} className="rounded-xl">
-                Limpiar
-              </Button>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendUserMessage()
-                }}
-                placeholder={INPUT_PLACEHOLDER}
-                className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none focus:border-gray-400"
-              />
-              <Button
-                size="icon"
-                onClick={sendUserMessage}
-                disabled={!canSend}
-                aria-label="Enviar"
-                className="rounded-xl"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Botón flotante */}
-      <div className="flex items-center gap-2">
-        {!open && (
-          <div className="hidden rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-gray-900 shadow-md sm:block">
-            {BUBBLE_HINT}
-          </div>
-        )}
-
-        <button
-          onClick={() => setOpen((v) => !v)}
-          aria-label="WhatsApp"
-          className={[
-            "relative grid h-14 w-14 place-items-center rounded-full shadow-xl",
-            !open ? "bochi-wa-pulse" : "",
-          ].join(" ")}
-          style={{ backgroundColor: WHATSAPP_GREEN }}
-        >
-          <WhatsAppIcon className="h-7 w-7 text-white" />
-        </button>
+      {/* Hint (opcional) */}
+      <div className="hidden rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-gray-900 shadow-md sm:block">
+        ¿Necesitás ayuda? Escribinos 💬
       </div>
+
+      {/* Botón flotante → abre WhatsApp directo */}
+      <a
+        href={waLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Abrir WhatsApp"
+        className="relative grid h-14 w-14 place-items-center rounded-full shadow-xl bochi-wa-pulse"
+        style={{ backgroundColor: WHATSAPP_GREEN }}
+      >
+        <WhatsAppIcon className="h-7 w-7 text-white" />
+      </a>
     </div>
   )
 }

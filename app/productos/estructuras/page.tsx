@@ -6,14 +6,18 @@ export default function Page() {
     <ProductSectionPage
       title="Estructuras"
       subtitle="Estructuras que elevan el impacto visual."
-      description="Armados especiales para entradas, fondos, soportes y sectores destacados. Personalizamos según el concepto del evento."
+      description={`Estructuras decorativas pensadas para destacar sectores especiales del evento.
+
+Contamos con distintos modelos, entre ellos estructuras con bolas de boliche; son ideales para colgar elementos decorativos o utilizar como back para fotos.
+
+Un recurso versátil que suma identidad, impacto visual y posibilidades de personalización.`}
       images={[
-        PLACEHOLDER,
-        PLACEHOLDER,
+          "/productos/estructuras/bola-boliche.jpg",
+          "/productos/estructuras/tunel-nuevo.jpg",
       ]}
       whatsappMessage="Hola! Quisiera cotizar Estructuras."
       backHref="/productos#estructuras"
-      inConstruction={true}
+      inConstruction={false}
     />
   )
 }

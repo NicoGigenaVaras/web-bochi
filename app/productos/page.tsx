@@ -431,11 +431,11 @@ export default function ProductosPage() {
         title: "Shinny Balls",
         subtitle: "Esferas que cambian tu fiesta.",
         images: [
-          "/productos/shinny-balls/plata-01.jpg",
-          "/productos/shinny-balls/plata-02.jpg",
-          "/productos/shinny-balls/plata-03.jpg",
-          "/productos/shinny-balls/plata-04.jpg",
-          "/productos/shinny-balls/basquet-01.jpg",
+          "/productos/shinny-balls/01.jpg",
+          "/productos/shinny-balls/02.jpg",
+          "/productos/shinny-balls/03.jpg",
+
+          
         ],
       },
       {
@@ -450,13 +450,26 @@ export default function ProductosPage() {
           "/productos/shimmer-wall/05.jpg",
           "/productos/shimmer-wall/06.jpg",
           "/productos/shimmer-wall/07.jpg",
+          "/productos/shimmer-wall/08.jpg",
+          "/productos/shimmer-wall/09.jpg",
+          "/productos/shimmer-wall/11.jpg",
+          "/productos/shimmer-wall/12.jpg",
+          "/productos/shimmer-wall/13.jpg",
         ],
       },
       {
         id: "barras-moviles",
         title: "Barras Móviles",
         subtitle: "Barra lista para servir, estética y funcional.",
-        images: [PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
+        images: [
+          "/productos/barras-moviles/01.jpg",
+          "/productos/barras-moviles/02.jpg",
+          "/productos/barras-moviles/03.jpg",
+          "/productos/barras-moviles/01.jpg",
+          "/productos/barras-moviles/02.jpg",
+          "/productos/barras-moviles/03.jpg",
+        
+        ],
       },
       {
         id: "livings",
@@ -478,6 +491,8 @@ export default function ProductosPage() {
           "/productos/estructuras/bola-boliche.jpg",
           "/productos/estructuras/tunel-black.jpg",
           "/productos/estructuras/tunel-color.jpg",
+          "/productos/estructuras/tunel-nuevo.jpg",
+          "/productos/estructuras/estructura.jpg",
         ],
       },
       {
@@ -490,7 +505,16 @@ export default function ProductosPage() {
         id: "premium",
         title: "Sectores Premium",
         subtitle: "Detalles premium que transforman el ambiente.",
-        images: [PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
+        images:[
+          "/productos/premium/01.jpg",
+          "/productos/premium/02.jpg",
+          "/productos/premium/03.jpg",
+          "/productos/premium/04.jpg",
+          "/productos/premium/05.jpg",
+          "/productos/premium/06.jpg",
+          "/productos/premium/07.jpg",
+          "/productos/premium/08.jpg",
+      ],
       },
       {
         id: "decoracion-personalizada",
@@ -504,6 +528,7 @@ export default function ProductosPage() {
           "/productos/decoracion-personalizada/fiesta-disco-03.jpg",
           "/productos/decoracion-personalizada/anio-nuevo-2026.jpg",
           "/productos/decoracion-personalizada/navidad-2026.jpg",
+          "/productos/decoracion-personalizada/barra-deco.jpg",
         ],
       },
     ],
