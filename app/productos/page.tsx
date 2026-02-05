@@ -19,6 +19,8 @@ import { Footer } from "@/components/footer"
 import { PageWrapper } from "@/components/page-wrapper"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { PageTransitionLoader } from "@/components/page-transition-loader"
+
 
 // ✅ Placeholder general (misma imagen para todo hasta que subas fotos reales)
 const PLACEHOLDER = "/placeholders/proximamente.jpg"
@@ -62,6 +64,54 @@ function preloadAround(list: string[], index: number) {
   preloadImage(list[index])
   preloadImage(list[(index + 1) % len])
   preloadImage(list[(index - 1 + len) % len])
+}
+
+// ✅ Preload de media inicial del catálogo (imágenes + videos)
+// - Imágenes: espera onload
+// - Videos: espera loadedmetadata (no baja el video entero)
+// - Failsafe: si algo falla, resolve igual
+function preloadMedia(src: string) {
+  return new Promise<void>((resolve) => {
+    if (!src || src === PLACEHOLDER) return resolve()
+
+    if (isVideo(src)) {
+      const v = document.createElement("video")
+      v.preload = "metadata"
+      v.muted = true
+      v.playsInline = true
+
+      const done = () => resolve()
+      v.onloadedmetadata = done
+      v.onerror = done
+      v.src = src
+      // algunos navegadores requieren llamar load()
+      try {
+        v.load()
+      } catch {
+        resolve()
+      }
+      return
+    }
+
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = () => resolve()
+    img.src = src
+  })
+}
+
+function pickPreloadList(catalog: CatalogItem[], perItem = 2) {
+  // elegimos 1-2 medias por producto para que el catálogo “entre” fluido
+  const out: string[] = []
+  for (const item of catalog) {
+    const safe = normalizeMedia(item.images)
+    for (let i = 0; i < Math.min(perItem, safe.length); i++) {
+      const src = safe[i]
+      if (src && src !== PLACEHOLDER) out.push(src)
+    }
+  }
+  // dedupe
+  return Array.from(new Set(out))
 }
 
 /** =====================================================
@@ -538,11 +588,43 @@ export default function ProductosPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxImages, setLightboxImages] = useState<string[]>([])
   const [lightboxIndex, setLightboxIndex] = useState(0)
+    // =========================
+  // Loader de página (entrada a /productos)
+  // =========================
+  const [pageReady, setPageReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    // precargamos 1–2 medias por producto (lo que se ve primero)
+    const list = pickPreloadList(catalog, 2)
+
+    // failsafe: nunca más de 3s cargando
+    const failSafe = window.setTimeout(() => {
+      if (!cancelled) setPageReady(true)
+    }, 3000)
+
+    Promise.all(list.map((src) => preloadMedia(src)))
+      .catch(() => {})
+      .finally(() => {
+        window.clearTimeout(failSafe)
+        if (!cancelled) setPageReady(true)
+      })
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(failSafe)
+    }
+  }, [catalog])
 
   const openLightbox = (images: string[], index: number) => {
     setLightboxImages(images)
     setLightboxIndex(index)
     setLightboxOpen(true)
+  }
+
+    if (!pageReady) {
+    return <PageTransitionLoader variant="logo" />
   }
 
   return (
