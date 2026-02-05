@@ -543,6 +543,9 @@ export default function ProductosPage() {
           "/productos/estructuras/tunel-color.jpg",
           "/productos/estructuras/tunel-nuevo.jpg",
           "/productos/estructuras/estructura.jpg",
+          "/productos/estructuras/cubo.jpg",
+          "/productos/estructuras/cabriada1.jpg",
+          "/productos/estructuras/cabriada2.jpg",
         ],
       },
       {
