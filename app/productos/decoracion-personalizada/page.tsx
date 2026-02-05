@@ -13,11 +13,11 @@ Nos adaptamos al espacio y al presupuesto de cada cliente, diseñando propuestas
 Cada ambientación es única, creada con dedicación para lograr un resultado armonioso y especial.`}
       images={[
           "/productos/decoracion-personalizada/festejo-40.jpg",
-          "/productos/decoracion-personalizada/anio-nuevo-2026.jpg",
+          "/productos/decoracion-personalizada/fiesta-disco-03.jpg",
       ]}
       whatsappMessage="Hola! Quisiera cotizar Decoración Personalizada."
       backHref="/productos#decoracion-personalizada"
-      inConstruction={true}
+      inConstruction={false}
     />
   )
 }

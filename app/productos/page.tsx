@@ -484,6 +484,9 @@ export default function ProductosPage() {
           "/productos/shinny-balls/01.jpg",
           "/productos/shinny-balls/02.jpg",
           "/productos/shinny-balls/03.jpg",
+          "/productos/shinny-balls/04.jpg",
+          "/productos/shinny-balls/05.jpg",
+          "/productos/shinny-balls/06.jpg",
 
           
         ],
@@ -513,11 +516,10 @@ export default function ProductosPage() {
         subtitle: "Barra lista para servir, estética y funcional.",
         images: [
           "/productos/barras-moviles/01.jpg",
-          "/productos/barras-moviles/02.jpg",
           "/productos/barras-moviles/03.jpg",
-          "/productos/barras-moviles/01.jpg",
-          "/productos/barras-moviles/02.jpg",
-          "/productos/barras-moviles/03.jpg",
+          "/productos/barras-moviles/04.jpg",
+          "/productos/barras-moviles/05.jpg",
+          "/productos/barras-moviles/06.jpg",
         
         ],
       },
@@ -582,6 +584,7 @@ export default function ProductosPage() {
           "/productos/decoracion-personalizada/anio-nuevo-2026.jpg",
           "/productos/decoracion-personalizada/navidad-2026.jpg",
           "/productos/decoracion-personalizada/barra-deco.jpg",
+          "/productos/decoracion-personalizada/vasos.jpg",
         ],
       },
     ],
