@@ -11,9 +11,9 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-serif"
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 export const metadata: Metadata = {
-  title: "BÔCHI – Ambientación & Mobiliario | Eventos Bochi",
+  title: "BÔCHI – Ambientación & Mobiliario | Bochi Eventos",
   description:
-    "Creamos escenarios que se viven y se fotografían. Mobiliario y ambientación para eventos en Córdoba y Alta Gracia.",
+    "Creamos escenarios que se viven y se fotografían. Mobiliario y ambientación para eventos con estilo.",
   generator: "v0.app",
 
   // ✅ Favicons según los archivos que ya tenés en /public
