@@ -25,3 +25,36 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Contexto local / scripts de trabajo ChatGPT
+_BOCHI_CONTEXT/
+BOCHI_CONTEXT_UPLOAD.zip
+00_recolectar_contexto_bochi.ps1
+01_redisenar_bochi_productos_centro_las_flores.ps1
+
+03_ajustar_reserva_invitaciones_footer.ps1
+
+04_video_y_refrescar_fotos_centro_social.ps1
+
+06_invitaciones_productos_3_fotos.ps1
+
+07_ajuste_integral_bochi.ps1
+
+08_footer_linkedin_y_menu_salon.ps1
+
+09_intro_carga_productos.ps1
+
+# Archivos auxiliares locales
+02_ajustar_footer_agenda_ubicacion.ps1
+05_activar_fotos_productos.ps1
+/LEEME_FOTOS.md
+/invitacion-15.jpg
+/invitacion-casamiento.jpg
+/invitacion-cumple.jpg
+/map-soluciones-informaticas-negro.png
+
+# Documentacion local de imagenes
+public/centro-social-las-flores/LEEME_FOTOS.md
+public/centro-social-las-flores/invitaciones/LEEME_FOTOS.md
+
+# Carpeta duplicada no utilizada
+public/productos/invitaciones-digitales/
