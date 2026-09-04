@@ -1,5 +1,5 @@
 ﻿import { redirect } from "next/navigation"
 
 export default function CentroSocialYCulturalLasFloresAlias() {
-  redirect("/centro-social-cultural-las-flores")
+  redirect("/centro-social-cultural-deportivo-las-flores")
 }

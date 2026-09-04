@@ -29,7 +29,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     label: "Salón Centro Social, Cultural y Deportivo Las Flores — Ingresá",
-    href: "/centro-social-cultural-las-flores",
+    href: "/centro-social-cultural-deportivo-las-flores",
     section: "top",
   },
   {
@@ -43,4 +43,6 @@ export const navigationItems: NavigationItem[] = [
     section: "bottom",
   },
 ]
+
+
 

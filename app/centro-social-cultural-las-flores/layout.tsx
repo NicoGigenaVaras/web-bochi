@@ -1,12 +1,13 @@
 ﻿import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Centro Social y Cultural Las Flores | BÔCHI Eventos",
-  description:
-    "Alquiler del Centro Social y Cultural Las Flores para eventos. Conocé los planes Básico y Premium, servicios incluidos y disponibilidad.",
+  robots: {
+    index: false,
+    follow: true,
+  },
 }
 
-export default function CentroSocialLasFloresLayout({
+export default function CentroSocialCulturalLasFloresLegacyLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
